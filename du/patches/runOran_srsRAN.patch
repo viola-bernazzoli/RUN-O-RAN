@@ -1,0 +1,526 @@
+diff --git a/srsRAN_Project/apps/helpers/e2/e2_cli11_schema.cpp b/srsRAN_Project/apps/helpers/e2/e2_cli11_schema.cpp
+index 457637b..0d48f8e 100644
+--- a/srsRAN_Project/apps/helpers/e2/e2_cli11_schema.cpp
++++ b/srsRAN_Project/apps/helpers/e2/e2_cli11_schema.cpp
+@@ -47,6 +47,8 @@ static void configure_cli11_e2_args(CLI::App&          app,
+   add_option(app, "--e2sm_kpm_enabled", e2_params.e2sm_kpm_enabled, "Enable KPM service module")->capture_default_str();
+   add_option(app, "--e2sm_rc_enabled", e2_params.e2sm_rc_enabled, "Enable RC service module")->capture_default_str();
+   add_option(app, "--e2sm_ccc_enabled", e2_params.e2sm_ccc_enabled, "Enable CCC service module")->capture_default_str();
++  add_option(app, "--e2sm_srs_enabled", e2_params.e2sm_srs_enabled, "Enable runOran service module")
++      ->capture_default_str();
+ }
+ 
+ void srsran::configure_cli11_with_e2_config_schema(CLI::App&          app,
+diff --git a/srsRAN_Project/apps/helpers/e2/e2_config_yaml_writer.cpp b/srsRAN_Project/apps/helpers/e2/e2_config_yaml_writer.cpp
+index 9f1819c..bd5ff1d 100644
+--- a/srsRAN_Project/apps/helpers/e2/e2_config_yaml_writer.cpp
++++ b/srsRAN_Project/apps/helpers/e2/e2_config_yaml_writer.cpp
+@@ -38,4 +38,5 @@ void srsran::fill_e2_config_in_yaml_schema(YAML::Node node, const e2_config& con
+   node["e2sm_kpm_enabled"]       = config.e2sm_kpm_enabled;
+   node["e2sm_rc_enabled"]        = config.e2sm_rc_enabled;
+   node["e2sm_ccc_enabled"]       = config.e2sm_ccc_enabled;
++  node["e2sm_srs_enabled"]       = config.e2sm_srs_enabled;
+ }
+diff --git a/srsRAN_Project/apps/units/flexible_o_du/o_du_high/e2/o_du_high_e2_config_translators.cpp b/srsRAN_Project/apps/units/flexible_o_du/o_du_high/e2/o_du_high_e2_config_translators.cpp
+index e3bad83..98b3435 100644
+--- a/srsRAN_Project/apps/units/flexible_o_du/o_du_high/e2/o_du_high_e2_config_translators.cpp
++++ b/srsRAN_Project/apps/units/flexible_o_du/o_du_high/e2/o_du_high_e2_config_translators.cpp
+@@ -39,6 +39,7 @@ e2ap_configuration srsran::generate_e2_config(const o_du_high_e2_config& config,
+   out_cfg.e2sm_kpm_enabled   = config.base_cfg.e2sm_kpm_enabled;
+   out_cfg.e2sm_rc_enabled    = config.base_cfg.e2sm_rc_enabled;
+   out_cfg.e2sm_ccc_enabled   = config.base_cfg.e2sm_ccc_enabled;
++  out_cfg.e2sm_srs_enabled   = config.base_cfg.e2sm_srs_enabled;
+ 
+   return out_cfg;
+ }
+diff --git a/srsRAN_Project/apps/units/o_cu_cp/e2/o_cu_cp_e2_config_translators.cpp b/srsRAN_Project/apps/units/o_cu_cp/e2/o_cu_cp_e2_config_translators.cpp
+index 44cb05a..397d252 100644
+--- a/srsRAN_Project/apps/units/o_cu_cp/e2/o_cu_cp_e2_config_translators.cpp
++++ b/srsRAN_Project/apps/units/o_cu_cp/e2/o_cu_cp_e2_config_translators.cpp
+@@ -34,6 +34,7 @@ e2ap_configuration srsran::generate_e2_config(const o_cu_cp_e2_config& cu_cp, gn
+   out_cfg.e2sm_kpm_enabled   = cu_cp.base_config.e2sm_kpm_enabled;
+   out_cfg.e2sm_rc_enabled    = cu_cp.base_config.e2sm_rc_enabled;
+   out_cfg.e2sm_ccc_enabled   = false;
++  out_cfg.e2sm_srs_enabled   = false;
+ 
+   return out_cfg;
+ }
+diff --git a/srsRAN_Project/apps/units/o_cu_up/e2/o_cu_up_e2_config_translators.cpp b/srsRAN_Project/apps/units/o_cu_up/e2/o_cu_up_e2_config_translators.cpp
+index b6b5e15..33c2084 100644
+--- a/srsRAN_Project/apps/units/o_cu_up/e2/o_cu_up_e2_config_translators.cpp
++++ b/srsRAN_Project/apps/units/o_cu_up/e2/o_cu_up_e2_config_translators.cpp
+@@ -39,6 +39,7 @@ e2ap_configuration srsran::generate_e2_config(const e2_config&              conf
+   out_cfg.e2sm_kpm_enabled   = config.e2sm_kpm_enabled;
+   out_cfg.e2sm_rc_enabled    = config.e2sm_rc_enabled;
+   out_cfg.e2sm_ccc_enabled   = false;
++  out_cfg.e2sm_srs_enabled   = false;
+ 
+   return out_cfg;
+ }
+diff --git a/srsRAN_Project/include/srsran/e2/e2ap_configuration.h b/srsRAN_Project/include/srsran/e2/e2ap_configuration.h
+index a14815f..81ebcbb 100644
+--- a/srsRAN_Project/include/srsran/e2/e2ap_configuration.h
++++ b/srsRAN_Project/include/srsran/e2/e2ap_configuration.h
+@@ -40,6 +40,7 @@ struct e2ap_configuration {
+   bool                          e2sm_kpm_enabled  = false;
+   bool                          e2sm_rc_enabled   = false;
+   bool                          e2sm_ccc_enabled  = false;
++  bool                          e2sm_srs_enabled  = false;
+ };
+ 
+ /// E2 Agent configuration.
+@@ -68,6 +69,7 @@ struct e2_config {
+   bool e2sm_rc_enabled = false;
+   /// Whether to enable CCC service module.
+   bool e2sm_ccc_enabled = false;
+-  /// Whether to enable SRS service module.
++  /// Whether to enable the runOran service module.
++  bool e2sm_srs_enabled = false;
+ };
+ } // namespace srsran
+diff --git a/srsRAN_Project/include/srsran/e2/e2ap_configuration_helpers.h b/srsRAN_Project/include/srsran/e2/e2ap_configuration_helpers.h
+index 1460e51..39dc059 100644
+--- a/srsRAN_Project/include/srsran/e2/e2ap_configuration_helpers.h
++++ b/srsRAN_Project/include/srsran/e2/e2ap_configuration_helpers.h
+@@ -38,6 +38,7 @@ inline e2ap_configuration make_default_e2ap_config()
+   cfg.e2sm_kpm_enabled  = false;
+   cfg.e2sm_rc_enabled   = false;
+   cfg.e2sm_ccc_enabled  = false;
++  cfg.e2sm_srs_enabled  = false;
+   return cfg;
+ }
+ 
+diff --git a/srsRAN_Project/include/srsran/e2/e2sm/e2sm_srs/ta_indication_store.h b/srsRAN_Project/include/srsran/e2/e2sm/e2sm_runOran/ta_indication_store.h
+similarity index 87%
+rename from srsRAN_Project/include/srsran/e2/e2sm/e2sm_srs/ta_indication_store.h
+rename to srsRAN_Project/include/srsran/e2/e2sm/e2sm_runOran/ta_indication_store.h
+index a47295d..c0dc202 100644
+--- a/srsRAN_Project/include/srsran/e2/e2sm/e2sm_srs/ta_indication_store.h
++++ b/srsRAN_Project/include/srsran/e2/e2sm/e2sm_runOran/ta_indication_store.h
+@@ -29,12 +29,12 @@
+ namespace srsran {
+ 
+ struct ta_indication_record {
+-  du_ue_index_t ue_index     = INVALID_DU_UE_INDEX;
+-  uint32_t      rnti         = 0;
++  du_ue_index_t ue_index      = INVALID_DU_UE_INDEX;
++  uint32_t      rnti          = 0;
+   uint64_t      timestamp_us  = 0;
+   uint32_t      timing_advance = 0;
+-  uint32_t      source        = 0;
+-  bool          attached      = true;
++  uint32_t      source         = 0;
++  bool          attached       = true;
+ };
+ 
+ void push_ta_indication(ta_indication_record record);
+diff --git a/srsRAN_Project/lib/e2/CMakeLists.txt b/srsRAN_Project/lib/e2/CMakeLists.txt
+index 74d1ddb..876463d 100644
+--- a/srsRAN_Project/lib/e2/CMakeLists.txt
++++ b/srsRAN_Project/lib/e2/CMakeLists.txt
+@@ -25,16 +25,16 @@ set(SOURCES
+         e2sm/e2sm_rc/e2sm_rc_control_service_impl.cpp
+         e2sm/e2sm_rc/e2sm_rc_control_action_du_executor.cpp
+         e2sm/e2sm_rc/e2sm_rc_control_action_cu_executor.cpp
+-        e2sm/e2sm_srs/ta_indication_store.cpp
++        e2sm/e2sm_runOran/ta_indication_store.cpp
+         e2sm/e2sm_manager.cpp
+         e2sm/e2sm_kpm/e2sm_kpm_utils.cpp
+         e2sm/e2sm_kpm/e2sm_kpm_report_service_impl.cpp
+         e2sm/e2sm_kpm/e2sm_kpm_du_meas_provider_impl.cpp
+         e2sm/e2sm_kpm/e2sm_kpm_cu_meas_provider_impl.cpp
+-        e2sm/e2sm_srs/e2sm_srs_impl.cpp
++        e2sm/e2sm_runOran/e2sm_runOran_impl.cpp
+         e2_srs_handler.cpp
+         e2_srs_message_handler.cpp
+-        srs_messages.pb.cc
++        e2sm/e2sm_runOran/srs_messages.pb.cc
+         gateways/e2_network_client_factory.cpp
+ )
+ 
+@@ -42,13 +42,8 @@ add_library(srsran_e2 STATIC ${SOURCES})
++find_package(Protobuf REQUIRED)
+ target_link_libraries(srsran_e2 e2ap_asn1 srsran_support srsran_ran protobuf::libprotobuf)
++
++# Protobuf 3.12 (the version packaged by Ubuntu 22.04) emits constructors with
++# an extra trailing semicolon. srsRAN builds with -Werror, so keep this generated
++# code warning in the E2 target while retaining warnings elsewhere.
++if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
++  target_compile_options(srsran_e2 PRIVATE -Wno-extra-semi)
++endif()
+ 
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
++target_include_directories(srsran_e2 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/e2sm/e2sm_runOran)
+ 
+ # Add test executable for SRS config request
+-add_executable(test_srs_config test_srs_config.cpp)
+-target_link_libraries(test_srs_config
+-    srsran_e2
+-    protobuf::libprotobuf
+-    srslog
+-)
+diff --git a/srsRAN_Project/lib/e2/common/e2_du_factory.cpp b/srsRAN_Project/lib/e2/common/e2_du_factory.cpp
+index 102f0a9..5d48f8a 100644
+--- a/srsRAN_Project/lib/e2/common/e2_du_factory.cpp
++++ b/srsRAN_Project/lib/e2/common/e2_du_factory.cpp
+@@ -34,7 +34,7 @@
+ #include "e2sm/e2sm_rc/e2sm_rc_control_action_du_executor.h"
+ #include "e2sm/e2sm_rc/e2sm_rc_control_service_impl.h"
+ #include "e2sm/e2sm_rc/e2sm_rc_impl.h"
+-#include "e2sm/e2sm_srs/e2sm_srs_impl.h"
++#include "e2sm/e2sm_runOran/e2sm_runOran_impl.h"
+ #include "srsran/e2/e2_agent_dependencies.h"
+ #include "srsran/e2/e2_srs_handler.h"
+ #include "srsran/e2/srs_runtime_config.h"
+@@ -103,7 +103,7 @@ std::unique_ptr<e2_agent> srsran::create_e2_du_agent(const e2ap_configuration&
+                                                      std::move(e2sm_ccc_packer),
+                                                      std::move(e2sm_ccc_iface)});
+ 
+-  // E2SM-SRS
++  // runOran E2SM
+   if (e2ap_cfg_.e2sm_srs_enabled) {
+     const gnb_srs_config srs_cfg = {
+         radio_cfg.has_value() && radio_cfg->num_rx_antennas != 0 ? radio_cfg->num_rx_antennas : 2U,
+@@ -126,12 +126,12 @@ std::unique_ptr<e2_agent> srsran::create_e2_du_agent(const e2ap_configuration&
+     }
+     static srs_data_collector srs_collector(srs_cfg);
+     register_srs_e2_data_collector(&srs_collector);
+-    auto srs_packer      = std::make_unique<e2sm_srs_packer>(logger);
+-    auto e2sm_srs_iface  = std::make_unique<e2sm_srs_impl>(logger, *srs_packer, srs_collector);
+-    dependencies.e2sm_modules.emplace_back(e2sm_module{e2sm_srs_packer::ran_func_id,
+-                                                        e2sm_srs_packer::oid,
++    auto srs_packer          = std::make_unique<e2sm_runOran_packer>(logger);
++    auto e2sm_runOran_iface  = std::make_unique<e2sm_runOran_impl>(logger, *srs_packer, srs_collector);
++    dependencies.e2sm_modules.emplace_back(e2sm_module{e2sm_runOran_packer::ran_func_id,
++                                                        e2sm_runOran_packer::oid,
+                                                         std::move(srs_packer),
+-                                                        std::move(e2sm_srs_iface)});
++                                                        std::move(e2sm_runOran_iface)});
+   }
+ 
+   auto e2_ext = std::make_unique<e2_entity>(std::move(dependencies));
+diff --git a/srsRAN_Project/lib/e2/common/e2ap_asn1_helpers.h b/srsRAN_Project/lib/e2/common/e2ap_asn1_helpers.h
+index f6fda7a..78e7795 100644
+--- a/srsRAN_Project/lib/e2/common/e2ap_asn1_helpers.h
++++ b/srsRAN_Project/lib/e2/common/e2ap_asn1_helpers.h
+@@ -25,7 +25,7 @@
+ #include "e2sm/e2sm_ccc/e2sm_ccc_asn1_packer.h"
+ #include "e2sm/e2sm_kpm/e2sm_kpm_asn1_packer.h"
+ #include "e2sm/e2sm_rc/e2sm_rc_asn1_packer.h"
+-#include "e2sm/e2sm_srs/e2sm_srs_impl.h"
++#include "e2sm/e2sm_runOran/e2sm_runOran_impl.h"
+ #include "srsran/adt/byte_buffer.h"
+ #include "srsran/asn1/asn1_utils.h"
+ #include "srsran/e2/e2.h"
+@@ -128,8 +128,8 @@ inline void fill_asn1_e2ap_setup_request(srslog::basic_logger&          logger,
+     }
+   }
+   if (e2ap_config.e2sm_srs_enabled) {
+-    std::string ran_oid     = e2sm_srs_packer::oid;
+-    uint32_t    ran_func_id = e2sm_srs_packer::ran_func_id;
++    std::string ran_oid     = e2sm_runOran_packer::oid;
++    uint32_t    ran_func_id = e2sm_runOran_packer::ran_func_id;
+     logger.info("Generate RAN function definition for OID: {}", ran_oid.c_str());
+     e2sm_interface* e2_iface = e2sm_mngr.get_e2sm_interface(ran_oid);
+     if (e2_iface) {
+diff --git a/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/CMakeLists.txt b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/CMakeLists.txt
+new file mode 100644
+index 0000000..8866c31
+--- /dev/null
++++ b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/CMakeLists.txt
+@@ -0,0 +1,10 @@
++#
++
++add_library(e2sm_runOran STATIC
++    e2sm_runOran_impl.cpp
++)
++
++target_link_libraries(e2sm_runOran
++    srslog
++    srsran_support
++)
+diff --git a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.cpp b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.cpp
+similarity index 79%
+rename from srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.cpp
+rename to srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.cpp
+index 3576bc0..7970a8c 100644
+--- a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.cpp
++++ b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.cpp
+@@ -1,6 +1,6 @@
+ 
+-#include "e2sm_srs_impl.h"
+-#include "srsran/e2/e2sm/e2sm_srs/ta_indication_store.h"
++#include "e2sm_runOran_impl.h"
++#include "srsran/e2/e2sm/e2sm_runOran/ta_indication_store.h"
+ #include "srsran/support/srsran_assert.h"
+ 
+ #include <chrono>
+@@ -214,66 +214,66 @@ public:
+ 
+ } // namespace
+ 
+-const std::string srsran::e2sm_srs_packer::short_name       = "ORAN-E2SM-SRS";
+-const std::string srsran::e2sm_srs_packer::oid              = "1.3.6.1.4.1.53148.1.7.2.1";
+-const std::string srsran::e2sm_srs_packer::func_description = "SRS and Timing Advance";
+-const uint32_t    srsran::e2sm_srs_packer::ran_func_id      = 5;
+-const uint32_t    srsran::e2sm_srs_packer::revision         = 0;
++const std::string srsran::e2sm_runOran_packer::short_name       = "ORAN runOran E2 Service Model";
++const std::string srsran::e2sm_runOran_packer::oid              = "1.3.6.1.4.1.53148.1.7.2.1";
++const std::string srsran::e2sm_runOran_packer::func_description = "runOran and Timing Advance";
++const uint32_t    srsran::e2sm_runOran_packer::ran_func_id      = 5;
++const uint32_t    srsran::e2sm_runOran_packer::revision         = 0;
+ 
+-// E2SM-SRS Implementation
+-e2sm_srs_impl::e2sm_srs_impl(srslog::basic_logger& logger_,
+-                             e2sm_handler& e2sm_packer_,
+-                             srs_data_collector& srs_collector_) :
++// runOran Implementation
++e2sm_runOran_impl::e2sm_runOran_impl(srslog::basic_logger& logger_,
++                                     e2sm_handler& e2sm_packer_,
++                                     srs_data_collector& srs_collector_) :
+   logger(logger_),
+   e2sm_packer(e2sm_packer_),
+   srs_collector(srs_collector_)
+ {
+-  logger.info("E2SM-SRS service model initialized");
++  logger.info("runOran service model initialized");
+ }
+ 
+-e2sm_handler& e2sm_srs_impl::get_e2sm_packer()
++e2sm_handler& e2sm_runOran_impl::get_e2sm_packer()
+ {
+   return e2sm_packer;
+ }
+ 
+-bool e2sm_srs_impl::action_supported(const asn1::e2ap::ric_action_to_be_setup_item_s& ric_action)
++bool e2sm_runOran_impl::action_supported(const asn1::e2ap::ric_action_to_be_setup_item_s& ric_action)
+ {
+   // Support SRS indication subscriptions
+   return true;  // Accept all SRS-related actions for now
+ }
+ 
+-std::unique_ptr<e2sm_report_service> 
+-e2sm_srs_impl::get_e2sm_report_service(const srsran::byte_buffer& action_definition)
++std::unique_ptr<e2sm_report_service>
++e2sm_runOran_impl::get_e2sm_report_service(const srsran::byte_buffer& action_definition)
+ {
+   // Custom action definition:
+   //   0x01 => Timing-advance stream
+   //   0x02 => SRS stream
+   if (!action_definition.empty() && *action_definition.begin() == 0x01U) {
+-    logger.info("SRS report service selected: timing advance stream");
++    logger.info("runOran report service selected: timing advance stream");
+     return std::make_unique<ta_report_service>();
+   }
+   if (!action_definition.empty() && *action_definition.begin() == 0x02U) {
+-    logger.info("SRS report service selected: SRS stream");
++    logger.info("runOran report service selected: SRS stream");
+     return std::make_unique<srs_report_service>(srs_collector);
+   }
+-  logger.warning("Unsupported E2SM-SRS action definition; no report service will be created");
++  logger.warning("Unsupported runOran action definition; no report service will be created");
+   return std::make_unique<null_report_service>();
+ }
+ 
+-e2sm_control_service* 
+-e2sm_srs_impl::get_e2sm_control_service(const e2sm_ric_control_request& request)
++e2sm_control_service*
++e2sm_runOran_impl::get_e2sm_control_service(const e2sm_ric_control_request& request)
+ {
+   // No control services for SRS model (read-only)
+   return nullptr;
+ }
+ 
+-bool e2sm_srs_impl::add_e2sm_control_service(std::unique_ptr<e2sm_control_service> control_service)
++bool e2sm_runOran_impl::add_e2sm_control_service(std::unique_ptr<e2sm_control_service> control_service)
+ {
+   // No control services needed
+   return false;
+ }
+ 
+-byte_buffer e2sm_srs_impl::handle_gnb_config_request(const byte_buffer& request_data)
++byte_buffer e2sm_runOran_impl::handle_gnb_config_request(const byte_buffer& request_data)
+ {
+   logger.info("Handling gNB config request");
+   
+@@ -311,13 +311,13 @@ byte_buffer e2sm_srs_impl::handle_gnb_config_request(const byte_buffer& request_
+ }
+ 
+ 
+-// E2SM-SRS Packer Implementation
+-e2sm_srs_packer::e2sm_srs_packer(srslog::basic_logger& logger_) : logger(logger_)
++// runOran Packer Implementation
++e2sm_runOran_packer::e2sm_runOran_packer(srslog::basic_logger& logger_) : logger(logger_)
+ {
+-  logger.info("E2SM-SRS packer initialized");
++  logger.info("runOran packer initialized");
+ }
+ 
+-e2sm_action_definition e2sm_srs_packer::handle_packed_e2sm_action_definition(const srsran::byte_buffer& buf)
++e2sm_action_definition e2sm_runOran_packer::handle_packed_e2sm_action_definition(const srsran::byte_buffer& buf)
+ {
+   (void)buf;
+   // Action definition is currently consumed directly by the report service.
+@@ -325,7 +325,7 @@ e2sm_action_definition e2sm_srs_packer::handle_packed_e2sm_action_definition(con
+ }
+ 
+ e2sm_event_trigger_definition
+-e2sm_srs_packer::handle_packed_event_trigger_definition(const srsran::byte_buffer& buf)
++e2sm_runOran_packer::handle_packed_event_trigger_definition(const srsran::byte_buffer& buf)
+ {
+   e2sm_event_trigger_definition trigger = {};
+   trigger.ric_service_type              = e2sm_event_trigger_definition::REPORT;
+@@ -341,23 +341,23 @@ e2sm_srs_packer::handle_packed_event_trigger_definition(const srsran::byte_buffe
+   return trigger;
+ }
+ 
+-e2sm_ric_control_request 
+-e2sm_srs_packer::handle_packed_ric_control_request(const asn1::e2ap::ric_ctrl_request_s& req)
++e2sm_ric_control_request
++e2sm_runOran_packer::handle_packed_ric_control_request(const asn1::e2ap::ric_ctrl_request_s& req)
+ {
+   e2sm_ric_control_request result;
+   // Minimal implementation - control not used for SRS
+   return result;
+ }
+ 
+-e2_ric_control_response 
+-e2sm_srs_packer::pack_ric_control_response(const e2sm_ric_control_response& e2sm_response)
++e2_ric_control_response
++e2sm_runOran_packer::pack_ric_control_response(const e2sm_ric_control_response& e2sm_response)
+ {
+   e2_ric_control_response result;
+   // Minimal implementation
+   return result;
+ }
+ 
+-asn1::unbounded_octstring<true> e2sm_srs_packer::pack_ran_function_description()
++asn1::unbounded_octstring<true> e2sm_runOran_packer::pack_ran_function_description()
+ {
+   asn1::unbounded_octstring<true> ran_function_description;
+   std::string description = short_name + ":" + func_description;
+diff --git a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.h b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.h
+similarity index 81%
+rename from srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.h
+rename to srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.h
+index f3ad187..0411651 100644
+--- a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/e2sm_srs_impl.h
++++ b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/e2sm_runOran_impl.h
+@@ -8,14 +8,14 @@
+ 
+ namespace srsran {
+ 
+-/// E2SM-SRS: Custom service model for SRS-based location estimation
++/// runOran: Custom service model for SRS-based location estimation
+ /// Handles config requests and SRS indications
+-class e2sm_srs_impl : public e2sm_interface
++class e2sm_runOran_impl : public e2sm_interface
+ {
+ public:
+-  e2sm_srs_impl(srslog::basic_logger& logger_, 
+-                e2sm_handler& e2sm_packer_,
+-                srs_data_collector& srs_collector_);
++  e2sm_runOran_impl(srslog::basic_logger& logger_,
++                    e2sm_handler& e2sm_packer_,
++                    srs_data_collector& srs_collector_);
+ 
+   e2sm_handler& get_e2sm_packer() override;
+ 
+@@ -38,8 +38,8 @@ private:
+   srs_data_collector&     srs_collector;
+ };
+ 
+-/// Simple E2SM-SRS packer (minimal implementation)
+-class e2sm_srs_packer : public e2sm_handler
++/// Simple runOran packer (minimal implementation)
++class e2sm_runOran_packer : public e2sm_handler
+ {
+ public:
+   static const std::string short_name;
+@@ -48,7 +48,7 @@ public:
+   static const uint32_t    ran_func_id;
+   static const uint32_t    revision;
+ 
+-  e2sm_srs_packer(srslog::basic_logger& logger_);
++  e2sm_runOran_packer(srslog::basic_logger& logger_);
+ 
+   e2sm_action_definition handle_packed_e2sm_action_definition(const srsran::byte_buffer& buf) override;
+   e2sm_event_trigger_definition
+diff --git a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/ta_indication_store.cpp b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/ta_indication_store.cpp
+similarity index 89%
+rename from srsRAN_Project/lib/e2/e2sm/e2sm_srs/ta_indication_store.cpp
+rename to srsRAN_Project/lib/e2/e2sm/e2sm_runOran/ta_indication_store.cpp
+index 539c632..bab4caf 100644
+--- a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/ta_indication_store.cpp
++++ b/srsRAN_Project/lib/e2/e2sm/e2sm_runOran/ta_indication_store.cpp
+@@ -1,5 +1,5 @@
+ 
+-#include "srsran/e2/e2sm/e2sm_srs/ta_indication_store.h"
++#include "srsran/e2/e2sm/e2sm_runOran/ta_indication_store.h"
+ 
+ #include <mutex>
+ 
+diff --git a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/CMakeLists.txt b/srsRAN_Project/lib/e2/e2sm/e2sm_srs/CMakeLists.txt
+deleted file mode 100644
+index 01b86c2..0000000
+--- a/srsRAN_Project/lib/e2/e2sm/e2sm_srs/CMakeLists.txt
++++ /dev/null
+@@ -1,10 +0,0 @@
+-#
+-
+-add_library(e2sm_srs STATIC
+-    e2sm_srs_impl.cpp
+-)
+-
+-target_link_libraries(e2sm_srs
+-    srslog
+-    srsran_support
+-)
+diff --git a/srsRAN_Project/include/srsran/e2/e2_du_factory.h b/srsRAN_Project/include/srsran/e2/e2_du_factory.h
+index 0000000..0000000 100644
+--- a/srsRAN_Project/include/srsran/e2/e2_du_factory.h
++++ b/srsRAN_Project/include/srsran/e2/e2_du_factory.h
+@@ -28,9 +28,19 @@
+ #include "srsran/e2/gateways/e2_connection_client.h"
+ #include "srsran/f1ap/du/f1ap_du.h"
+ #include "srsran/support/timers.h"
++#include <optional>
+ 
+ namespace srsran {
+ 
++/// Runtime DU radio parameters to expose via E2 SRS gNB configuration response.
++struct e2_du_radio_config {
++  uint16_t num_rx_antennas        = 0;
++  uint16_t ul_bandwidth_prb       = 0;
++  double   sampling_frequency_hz  = 0.0;
++  double   subcarrier_spacing_khz = 0.0;
++  double   carrier_frequency_hz   = 0.0;
++};
++
+ /// Creates a instance of an E2 interface (with subscription manager)
+ std::unique_ptr<e2_agent> create_e2_du_agent(const e2ap_configuration&      e2ap_cfg_,
+@@ -38,6 +48,7 @@ std::unique_ptr<e2_agent> create_e2_du_agent(const e2ap_configuration&      e2ap_cfg_,
+                                              srs_du::f1ap_ue_id_translator* f1ap_ue_id_translator_,
+                                              srs_du::du_configurator*       du_configurator_,
+                                              timer_factory                  timers_,
+-                                             task_executor&                 e2_exec_);
++                                             task_executor&                 e2_exec_,
++                                             const std::optional<e2_du_radio_config>& radio_cfg = std::nullopt);
+ 
+ } // namespace srsran
+diff --git a/srsRAN_Project/include/srsran/ran/srs/srs_context.h b/srsRAN_Project/include/srsran/ran/srs/srs_context.h
+index 0000000..0000000 100644
+--- a/srsRAN_Project/include/srsran/ran/srs/srs_context.h
++++ b/srsRAN_Project/include/srsran/ran/srs/srs_context.h
+@@ -36,6 +36,12 @@ public:
+   /// Constructs from values.
+   explicit srs_context(unsigned sector_id_, rnti_t rnti_) : sector_id(sector_id_), rnti(rnti_) {}
+ 
++  /// Returns the sector identifier.
++  unsigned get_sector_id() const { return sector_id; }
++
++  /// Returns the UE RNTI.
++  rnti_t get_rnti() const { return rnti; }
++
+ private:
+   friend struct fmt::formatter<srs_context>;

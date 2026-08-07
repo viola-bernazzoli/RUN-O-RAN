@@ -1,0 +1,4 @@
+generated/
+python/lib/srs_messages_pb2.py
+python/lib/srs_messages_pb2.pyi
+python/lib/__pycache__/

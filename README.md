@@ -2,7 +2,7 @@
 
 This repository is part of the RUN-O-RAN publication. If you use this code, its service model, or results obtained with it, please cite the publication below.
 
-> V. Bernazzoli, P. Morri, E. Moro, M. Brambilla, I. Filippini, and M. Nicoli, “Robust Uplink Ranging in 5G Networks: An Integrated O-RAN Approach,” *2025 IEEE 22nd International Conference on Mobile Ad-Hoc and Smart Systems (MASS)*, 2025. [Publication record](https://hdl.handle.net/11311/1307598).
+> V. Bernazzoli, P. Morri, E. Moro, M. Brambilla, I. Filippini, and M. Nicoli, “Robust Uplink Ranging in 5G Networks: An Integrated O-RAN Approach,” *2025 IEEE 22nd International Conference on Mobile Ad-Hoc and Smart Systems (MASS)*, 2025. [Publication record](https://ieeexplore.ieee.org/document/11206232/).
 
 Copyright © 2026 RUN-O-RAN contributors. See the licences of the bundled third-party projects, including srsRAN and ORAN-SC, for their respective terms.
 

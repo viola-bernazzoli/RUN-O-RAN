@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package srsran.e2.srs;
+
+// Message representing a complete SRS symbol (sequence of IQ samples)
+message SrsSymbol {
+    // Packed IQ sample:
+    //   bits [31:16] => int16 real
+    //   bits [15:0]  => int16 imag
+    repeated fixed32 iq_samples = 1;
+}
+
+// Message representing SRS data for one antenna
+message SrsAntennaData {
+    uint32 antenna_id = 1;
+    bool generated = 2;  // true => generated/reference SRS, false => received SRS
+    SrsSymbol srs = 3;   // SRS payload
+}
+
+// Message for a single UE's SRS transmission
+message UeSrsData {
+    uint32 rnti = 1;
+    uint64 timestamp = 2;  // Timestamp in microseconds
+    repeated SrsAntennaData antenna_data = 3;  // SRS data from all receiving antennas
+}
+
+// Message containing SRS information for all connected UEs
+message SrsIndicationMessage {
+    repeated UeSrsData ue_srs_data = 1;
+}
+
+// Request for gNB configuration
+message GnbConfigRequest {
+    uint64 request_id = 1;  // Unique request identifier
+    string xapp_id = 2;     // xApp identifier requesting config
+}
+
+// Message for gNB configuration information
+message GnbConfigMessage {
+    uint64 request_id = 1;  // Matches the request_id from GnbConfigRequest
+    uint32 num_rx_antennas = 2;
+    uint32 srs_bandwidth_prb = 3;      // Current SRS bandwidth in PRBs
+    uint32 num_srs_symbols = 4;        // Number of occupied OFDM symbols for SRS resource
+    double sampling_frequency_hz = 5;  // Sampling frequency in Hz
+    double subcarrier_spacing_khz = 6; // Subcarrier spacing in kHz
+    bool success = 7;                  // Whether config retrieval was successful
+    uint32 ul_bandwidth_prb = 8;       // UL BWP bandwidth in PRBs
+    double carrier_frequency_hz = 9;   // Carrier frequency in Hz
+}
+
+// Control request to configure default SRS parameters for newly attached UEs.
+message SrsDefaultsControlRequest {
+    uint64 request_id = 1;
+    string xapp_id = 2;
+    uint32 tx_comb = 3;                        // 2 => n2, 4 => n4
+    uint32 num_occupied_ofdm_symbols = 4;      // 1 => n1, 2 => n2, 4 => n4
+    bool frequency_hopping_enabled = 5;        // false to disable hopping
+    uint32 b_srs = 6;                          // expected 0
+    bool use_max_available_c_srs = 7;          // compute max c_srs under current UL PRB budget
+    uint32 c_srs = 8;                          // used only when use_max_available_c_srs=false
+    uint32 periodicity_slots = 9;             // e.g. 20 for sl20 (10 ms at numerology 1)
+    uint32 periodicity_offset = 10;           // slot offset in [0, periodicity_slots-1]
+}
+
+// Applied SRS defaults after control request handling.
+message SrsDefaultsApplied {
+    uint32 tx_comb = 1;
+    uint32 num_occupied_ofdm_symbols = 2;
+    bool frequency_hopping_enabled = 3;
+    uint32 b_srs = 4;
+    uint32 c_srs = 5;
+    uint32 m_srs_0_prb = 6;                    // Occupied PRBs for B_srs=0
+    uint32 ul_bandwidth_prb = 7;
+    uint32 freq_domain_shift = 8;
+    uint32 periodicity_slots = 9;
+    uint32 periodicity_offset = 10;
+}
+
+// ACK sent by gNB for SRS defaults control.
+message SrsDefaultsControlAck {
+    uint64 request_id = 1;
+    bool success = 2;
+    string status_text = 3;
+    SrsDefaultsApplied applied = 4;
+}
+
+// Source of a timing advance observation.
+enum TimingAdvanceSource {
+    TIMING_ADVANCE_SOURCE_UNKNOWN = 0;
+    TIMING_ADVANCE_SOURCE_RAR = 1;
+    TIMING_ADVANCE_SOURCE_CONNECTED_UE = 2;
+}
+
+// Timing advance observation for a single UE.
+message TimingAdvanceData {
+    uint32 rnti = 1;
+    uint64 timestamp = 2;                 // Timestamp in microseconds
+    uint32 timing_advance = 3;            // Raw gNB timing advance value
+    TimingAdvanceSource source = 4;       // RAR or connected-UE update
+    bool attached = 5;                    // True when the UE is already attached
+    uint32 ue_index = 6;                  // DU UE index when the C-RNTI is not directly available
+}
+
+// Indication message carrying timing advance observations.
+message TimingAdvanceIndicationMessage {
+    repeated TimingAdvanceData timing_advance_data = 1;
+}
+
+// Message for UE list information
+message UeListMessage {
+    uint32 connected_ues = 1;
+    repeated uint32 rnti_list = 2;
+}
+
+// Message for DOA and distance estimation results
+message UeLocationEstimate {
+    uint32 rnti = 1;
+    double doa_azimuth_deg = 2;     // Direction of Arrival - Azimuth in degrees
+    double doa_elevation_deg = 3;    // Direction of Arrival - Elevation in degrees
+    double distance_meters = 4;      // Distance in meters
+    uint64 timestamp = 5;            // Timestamp of estimation
+    bool valid = 6;                  // Whether the estimate is valid
+}
+
+// Response from xApp with location estimates
+message LocationEstimateResponse {
+    repeated UeLocationEstimate ue_locations = 1;
+}
