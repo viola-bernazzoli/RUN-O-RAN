@@ -28,7 +28,7 @@ RUN-O-RAN/
 └── oran-sc-ric/         # Suggested and tested ORAN-SC RIC deployment, including Python xApps.
 ```
 
-`e2-runOran-sm` is RIC-agnostic at the protocol level: the xApp and `e2sm_runOran` can be adapted to another RIC implementation. The included deployment helper targets ORAN-SC RIC because that is the implementation tested with this project.
+`e2-runOran-sm` is RIC-agnostic at the protocol level: the xApp and `e2sm_runOran` can be adapted to any RIC implementation. The included deployment helper targets ORAN-SC RIC, as that implementation was fully tested within this project.
 
 ## Installation and first run
 
@@ -51,13 +51,13 @@ Keep the three sibling folders shown in the [workspace layout](#workspace-layout
 
    By default the prepared checkout is the sibling folder `../srsRAN_Project`, matching the workspace layout above. The upstream repository's default branch is now an archive notice, so the builder explicitly uses `release_25_10`. To use an existing checkout elsewhere, set `SRSRAN_DIR` to its full path; to select another compatible source ref, set `SRSRAN_BRANCH`.
 
-3. Install the xApp files into the installed ORAN-SC RIC checkout. From this directory, the sibling checkout is detected automatically; alternatively pass its path explicitly:
+3. Install the E2SM and xApp files into the already-installed RIC. If you're using ORAN-SC RIC, we provide a helper that does that automatically. From this directory, the sibling checkout is detected automatically; alternatively pass its path explicitly:
 
    ```bash
    ./runOran-in-oran-sc-ric.sh ../oran-sc-ric
    ```
 
-   The helper copies the minimal Python xApp and generated Python protobuf binding into `oran-sc-ric/xApps/python/`. It also copies the C++ `e2sm_runOran` source bundle to `oran-sc-ric/e2-agents/srsRAN/e2sm_runOran/` for reference. The gNB is still built by `setup_your_gnb.sh`.
+   The helper copies the minimal Python xApp and generated Python protobuf binding into `oran-sc-ric/xApps/python/`. It also copies the C++ `e2sm_runOran` source bundle to `oran-sc-ric/e2-agents/srsRAN/e2sm_runOran/` for reference. 
 
 4. Start the RIC using its normal ORAN-SC deployment procedure, then start the minimal xApp from the ORAN-SC Python xApp directory:
 
