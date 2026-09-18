@@ -2,7 +2,7 @@
 
 This repository is part of the RUN-O-RAN publication. If you use this code, its service model, or results obtained with it, please cite the publication below.
 
-> V. Bernazzoli, A. Ceresoli, I. Filippini, “RUN-O-RAN: An O-RAN-Native Architecture Enabling Cooperative Uplink Localization,” *arXiv*, 2026. [Publication record](https://arxiv.org/).
+> Bernazzoli, V., Ceresoli, A., & Filippini, I. (2026). RUN-O-RAN: An O-RAN-native architecture enabling cooperative uplink localization. arXiv. [Publication record](https://arxiv.org/abs/2609.20640).
 
 Copyright © 2026 RUN-O-RAN contributors. See the licences of the bundled third-party projects, including srsRAN and ORAN-SC, for their respective terms.
 
